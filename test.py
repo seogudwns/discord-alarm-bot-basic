@@ -1,21 +1,3 @@
-# import discord
-# from discord.ext import commands
-
-# discord_bot_token = 'MTAyODg4NjE1NTU4NTkzMzMzMg.GoXNm9.1yB98uFDsCm5MybXAlT53w7YIlKT69UWUZoXlM'
-# intents = discord.Intents.default()
-# intents.message_content = True
-# bot = commands.Bot(command_prefix=">", intents=intents)
-
-# @bot.event
-# async def on_ready():
-#     print('Bot: {}'.format(bot.user))
-
-# @bot.command()
-# async def ping(ctx):
-#     await ctx.send("pong")
-
-# bot.run(discord_bot_token)
-
 from datetime import datetime
 import time
 

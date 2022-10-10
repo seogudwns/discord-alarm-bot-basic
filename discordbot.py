@@ -28,7 +28,8 @@ async def ping(ctx):
 @bot.command(name="1234")
 async def _12345(ctx):
     await ctx.send("5678")
-#파이썬 문법에 따라 함수를 만들 때에는 첫글자에는 숫자를 넣을 수 없는데, 숫자를 사용하고싶다면 함수 이름 자리는 다른 아무것으로 대체하고 괄호 안에 name=""을 사용하여 명령어를 제작할 수 있다.
+#파이썬 문법에 따라 함수를 만들 때에는 첫글자에는 숫자를 넣을 수 없는데, 숫자를 사용하고 
+# 싶다면 함수 이름 자리는 다른 아무것으로 대체하고 괄호 안에 name=""을 사용하여 명령어를 제작할 수 있다.
 
 @bot.command(name='hello')
 async def author_test(ctx):
