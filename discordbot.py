@@ -6,8 +6,9 @@ import time
 from threading import Thread
 
 import discord
+import discord.ext
 from discord.ext import commands
-from time_func import time_calc
+from Services.time_func import (time_calc, threader)
 
 discord_token = os.environ.get('DISOCRD_TOKEN')
 intents = discord.Intents.default()
@@ -19,9 +20,9 @@ bot = commands.Bot(command_prefix='>',intents=intents)
 async def on_ready():
     print('login Bot: {}'.format(bot.user))
 
-# @bot.command() # def를 써줘야한다. 여기서는 ping을 쓸 시 pong이 돌아감.
-# async def ping(ctx):
-#     await ctx.send(f'pong! {round(round(bot.latency, 4)*1000)}ms')
+@bot.command() # def를 써줘야한다. 여기서는 ping을 쓸 시 pong이 돌아감.
+async def ping(ctx):
+    await ctx.send(f'pong! {round(round(bot.latency, 4)*1000)}ms')
 #     # 봇의 핑을 pong! 이라는 메세지와 함께 전송한다. latency는 일정 시간마다 측정됨에 따라 정확하지 않을 수 있다.
 #     await ctx.send('이후 0부터 3까지 5초 단위로 출력이 됩니다.')
 #     for i in range(4):
@@ -74,22 +75,26 @@ async def repeat_timer(ctx):
             
         repeat = int(lst[2])
         message = ' '.join(lst[3:])
-        if '@everyone' in message:
-            message.replace('@everyone','<@everyone>')
         
         await ctx.send('반복 알람 설정이 예약되었습니다.')
-        time.sleep(after_time) # !
+        await threader(after_time)
 
         await ctx.send('반복 알람 시작! 메시지 : {}'.format(message))
         
         for i in range(repeat):
-            time.sleep(repeat_time)
+            await threader(repeat_time)
             await ctx.send(message)
             
         await ctx.send('반복알람이 종료되었습니다.')
         
     except:
         await ctx.send('잘못된 사용법입니다.')
+
+@bot.command(name='test')
+async def test_command(ctx):
+    discord.ext.tasks.Loop
+
+
 
 # @bot.command(name='check')
 # async def check(ctx):
@@ -118,4 +123,6 @@ bot.run(discord_token)
 # ! Second Problem.
 # 시간은 어떻게 제어하면 좋을까?
 # time.sleep()에 어떤 maximum 한도가 있다.. 어쩌지? + 경고메시지도 뜨네??..
-# Thread라는 것이 있는데 이를 이용해보자..
+# Thread라는 것이 있는데 이를 이용해보면 될까?
+# 참고용1 : https://github.com/seogudwns/discord.py/blob/master/discord/ext/tasks/__init__.py 
+# 참고용2 : https://fishpoint.tistory.com/5237

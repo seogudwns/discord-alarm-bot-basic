@@ -1,4 +1,5 @@
 # 파일 하나에 담기에는 너무 길어서 함수로 분리.
+import time
 
 def time_calc(arr):
     times = 0
@@ -22,3 +23,7 @@ def time_calc(arr):
         times += int(''.join(tmp))
     
     return times
+
+def threader(unit_time:int):
+    time.sleep(unit_time)
+    return
