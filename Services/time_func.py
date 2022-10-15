@@ -1,5 +1,6 @@
 # 파일 하나에 담기에는 너무 길어서 함수로 분리.
 import time
+import asyncio
 
 def time_calc(arr):
     times = 0
@@ -25,5 +26,5 @@ def time_calc(arr):
     return times
 
 def threader(unit_time:int):
-    time.sleep(unit_time)
+    asyncio.sleep(unit_time)
     return

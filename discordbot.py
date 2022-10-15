@@ -1,3 +1,4 @@
+import asyncio
 from dotenv import load_dotenv
 import os
 load_dotenv()
@@ -55,7 +56,7 @@ async def timer(ctx):
         elif len(lst)>2:
             message = ' '.join(lst[1:])
         
-        time.sleep(res_time)
+        await threader(res_time)
         await ctx.send(message)
     except:
         await ctx.send('잘못된 사용법입니다.')
@@ -77,6 +78,7 @@ async def repeat_timer(ctx):
         message = ' '.join(lst[3:])
         
         await ctx.send('반복 알람 설정이 예약되었습니다.')
+        
         await threader(after_time)
 
         await ctx.send('반복 알람 시작! 메시지 : {}'.format(message))
@@ -126,3 +128,4 @@ bot.run(discord_token)
 # Thread라는 것이 있는데 이를 이용해보면 될까?
 # 참고용1 : https://github.com/seogudwns/discord.py/blob/master/discord/ext/tasks/__init__.py 
 # 참고용2 : https://fishpoint.tistory.com/5237
+# Done... use asyncio(python의 비동기에 대한 사용.)
