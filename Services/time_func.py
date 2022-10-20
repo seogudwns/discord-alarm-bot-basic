@@ -25,6 +25,6 @@ def time_calc(arr):
     
     return times
 
-def threader(unit_time:int):
-    asyncio.sleep(unit_time)
+async def threader(unit_time:int):
+    await asyncio.sleep(unit_time)
     return

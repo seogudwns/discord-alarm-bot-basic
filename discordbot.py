@@ -1,13 +1,10 @@
-import asyncio
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
 import time
-from threading import Thread
 
 import discord
-import discord.ext
 from discord.ext import commands
 from Services.time_func import (time_calc, threader)
 
@@ -85,18 +82,21 @@ async def repeat_timer(ctx):
         
         for i in range(repeat):
             await threader(repeat_time)
-            await ctx.send(message)
+            await ctx.send('{}. {}'.format(i,message))
             
         await ctx.send('반복알람이 종료되었습니다.')
         
     except:
         await ctx.send('잘못된 사용법입니다.')
 
-@bot.command(name='test')
-async def test_command(ctx):
-    discord.ext.tasks.Loop
 
+# ! 이건 아마도 쉬울텐데... 중간에 정지시키려면 어떻게 하면 좋을까??
+@bot.command(name='알람 리스트 불러오기')
+def alarm_lst(ctx):
 
+    return ctx.send('11')
+
+bot.run(discord_token)
 
 # @bot.command(name='check')
 # async def check(ctx):
@@ -109,7 +109,6 @@ async def test_command(ctx):
     
 #     await ctx.send(check_lst)
 
-bot.run(discord_token)
 
 
 # ! First problem.
