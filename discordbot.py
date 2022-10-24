@@ -2,8 +2,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-import time
-
+import asyncio
 import discord
 from discord.ext import commands
 from Services.time_func import (time_calc, threader)
@@ -21,11 +20,6 @@ async def on_ready():
 @bot.command() # def를 써줘야한다. 여기서는 ping을 쓸 시 pong이 돌아감.
 async def ping(ctx):
     await ctx.send(f'pong! {round(round(bot.latency, 4)*1000)}ms')
-#     # 봇의 핑을 pong! 이라는 메세지와 함께 전송한다. latency는 일정 시간마다 측정됨에 따라 정확하지 않을 수 있다.
-#     await ctx.send('이후 0부터 3까지 5초 단위로 출력이 됩니다.')
-#     for i in range(4):
-#         time.sleep(5)
-#         await ctx.send('{}'.format(i))
 
 @bot.command(name='사용자정보')
 async def author_test(ctx):
@@ -53,8 +47,7 @@ async def timer(ctx):
         elif len(lst)>2:
             message = ' '.join(lst[1:])
         
-        await threader(res_time)
-        await ctx.send(message)
+        asyncio.create_task(threader(ctx, res_time, message))
     except:
         await ctx.send('잘못된 사용법입니다.')
 
@@ -67,21 +60,24 @@ async def repeat_timer(ctx):
         repeat_time = time_calc(lst[1])
         # print(after_time,repeat_time)
         if max(repeat_time,after_time) >= 5184000:
-            await ctx.send('대기시간 혹은 반복시간이 너무 깁니다.')
-            time.sleep(0.5)
-            the_error_string
+            await ctx.send('대기시간 혹은 반복시간이 너무 깁니다. 2달 이내의 시간으로 설정해주세요.')
+            raise
             
         repeat = int(lst[2])
         message = ' '.join(lst[3:])
         
         await ctx.send('반복 알람 설정이 예약되었습니다.')
         
-        await threader(after_time)
+        x = await threader(after_time)
+        if x:
+            raise
 
         await ctx.send('반복 알람 시작! 메시지 : {}'.format(message))
         
         for i in range(repeat):
-            await threader(repeat_time)
+            x = await threader(repeat_time)
+            if x:
+                raise 
             await ctx.send('{}. {}'.format(i,message))
             
         await ctx.send('반복알람이 종료되었습니다.')
@@ -90,11 +86,21 @@ async def repeat_timer(ctx):
         await ctx.send('잘못된 사용법입니다.')
 
 
-# ! 이건 아마도 쉬울텐데... 중간에 정지시키려면 어떻게 하면 좋을까??
-@bot.command(name='알람 리스트 불러오기')
-def alarm_lst(ctx):
-
-    return ctx.send('11')
+# ! 이건 아마도 쉬울텐데... 중간에 정지시키려면 어떻게 하면 좋을까?? thread의 event를 생각해서 코드 업데이트를 해보자.
+# ! 우선 알람 리스트 불러오기부터 완성시켜볼 것..!..
+@bot.command(name='알람리스트')
+async def alarm_lst(ctx):
+    print(bot)
+    x = await bot.application_info()
+    print(x.id)
+    print(x)
+    print(bot.check)
+    print(bot.user)
+    print(bot.tree.get_commands())
+    print(bot.loop.get_task_factory())
+    
+    print('====================')
+    await ctx.send('11')
 
 bot.run(discord_token)
 
@@ -128,3 +134,6 @@ bot.run(discord_token)
 # 참고용1 : https://github.com/seogudwns/discord.py/blob/master/discord/ext/tasks/__init__.py 
 # 참고용2 : https://fishpoint.tistory.com/5237
 # Done... use asyncio(python의 비동기에 대한 사용.)
+
+# ! Third Problem.
+# 여러 명령 제어.. ex 취소 등.. asyncio 사용에 익숙해질 필요가 있다. + 이미 디코 서버에서는 asyncio를 써서 코드를 제어하고 있는듯..

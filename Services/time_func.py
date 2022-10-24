@@ -25,6 +25,8 @@ def time_calc(arr):
     
     return times
 
-async def threader(unit_time:int):
+async def threader(ctx, unit_time:int, message:str = None):
     await asyncio.sleep(unit_time)
-    return
+    if message == None:
+        return
+    await ctx.send(message)
