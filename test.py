@@ -53,20 +53,22 @@
 # print(f"finished at {time.strftime('%X')}")
 # memory_usage('#3')
 
-import asyncio
-from datetime import datetime
-from random import randint
+# import asyncio
+# from datetime import datetime
+# from random import randint
 
-async def run_job() -> None:
-    delay = randint(5, 15)
-    print(f'{datetime.now()} sleep for {delay} seconds')
-    await asyncio.sleep(delay)  # 5~15초 동안 잠자기
-    print(f'{datetime.now()} finished ({delay} sec)')
+# async def run_job() -> None:
+#     delay = randint(5, 15)
+#     print(f'{datetime.now()} sleep for {delay} seconds')
+#     await asyncio.sleep(delay)  # 5~15초 동안 잠자기
+#     print(f'{datetime.now()} finished ({delay} sec)')
 
-async def main() -> None:
+# async def main() -> None:
     
-    for i in range(int(input())):
-        asyncio.create_task(run_job())
-        await asyncio.sleep(10)
+#     for i in range(int(input())):
+#         asyncio.create_task(run_job())
+#         await asyncio.sleep(10)
 
-asyncio.run(main())
+# asyncio.run(main())
+import random
+print(str(random.random())[2:])

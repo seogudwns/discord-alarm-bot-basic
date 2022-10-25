@@ -5,7 +5,11 @@ load_dotenv()
 import asyncio
 import discord
 from discord.ext import commands
+
 from Services.time_func import (time_calc, threader)
+from Services.etc_func import create_tmp_id
+from Services.alarm_info import alarm_info
+from Services.Exception import (TimeLongError)
 
 discord_token = os.environ.get('DISOCRD_TOKEN')
 intents = discord.Intents.default()
@@ -46,8 +50,14 @@ async def timer(ctx):
             message = lst[1]
         elif len(lst)>2:
             message = ' '.join(lst[1:])
+            
+        
+        if res_time >= 5184000:
+            raise TimeLongError           
         
         asyncio.create_task(threader(ctx, res_time, message))
+    except TimeLongError:
+        await ctx.send('2달 이내의 시간으로 설명해주세요.')
     except:
         await ctx.send('잘못된 사용법입니다.')
 
@@ -60,29 +70,26 @@ async def repeat_timer(ctx):
         repeat_time = time_calc(lst[1])
         # print(after_time,repeat_time)
         if max(repeat_time,after_time) >= 5184000:
-            await ctx.send('대기시간 혹은 반복시간이 너무 깁니다. 2달 이내의 시간으로 설정해주세요.')
-            raise
-            
+            raise TimeLongError            
         repeat = int(lst[2])
         message = ' '.join(lst[3:])
         
         await ctx.send('반복 알람 설정이 예약되었습니다.')
         
-        x = await threader(after_time)
+        x = await threader(ctx, after_time)
         if x:
             raise
 
         await ctx.send('반복 알람 시작! 메시지 : {}'.format(message))
         
-        for i in range(repeat):
-            x = await threader(repeat_time)
-            if x:
-                raise 
-            await ctx.send('{}. {}'.format(i,message))
-            
-        await ctx.send('반복알람이 종료되었습니다.')
+        for i in range(1,repeat+1):
+            asyncio.create_task(threader(ctx, i*repeat_time, '{}. {}'.format(i,message)))
         
-    except:
+        asyncio.create_task(threader(ctx, i*repeat_time, '반복알람이 종료되었습니다.'))
+        
+    except TimeLongError:
+        await ctx.send('대기시간 혹은 반복시간이 너무 깁니다. 2달 이내의 시간으로 설정해주세요.')
+    except Exception:
         await ctx.send('잘못된 사용법입니다.')
 
 
