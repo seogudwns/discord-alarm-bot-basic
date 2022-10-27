@@ -70,5 +70,5 @@
 #         await asyncio.sleep(10)
 
 # asyncio.run(main())
-import random
-print(str(random.random())[2:])
+# import random
+# print(str(random.random())[2:])

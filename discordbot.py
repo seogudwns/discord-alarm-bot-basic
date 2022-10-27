@@ -9,7 +9,13 @@ from discord.ext import commands
 from Services.time_func import (time_calc, threader)
 from Services.etc_func import create_tmp_id
 from Services.alarm_info import alarm_info
-from Services.Exception import (TimeLongError)
+from Services.Exception import (TimeLongError, ListLongError, RepeatLongError)
+
+# !!!! 제어부분. 
+
+list_limit = 10 # 알람 갯수제한.
+
+# ! 코드.
 
 discord_token = os.environ.get('DISOCRD_TOKEN')
 intents = discord.Intents.default()
@@ -43,6 +49,8 @@ author ID = {author_id}
 @bot.command(name='알람')
 async def timer(ctx):
     try:
+        if len(alarm_info) == list_limit:
+            raise ListLongError
         lst = ctx.message.content.split()[1:]
         message = '알람이 종료되었습니다.'
         res_time = time_calc(lst[0])
@@ -53,9 +61,11 @@ async def timer(ctx):
             
         
         if res_time >= 5184000:
-            raise TimeLongError           
+            raise TimeLongError
         
         asyncio.create_task(threader(ctx, res_time, message))
+    except ListLongError:
+        await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
     except TimeLongError:
         await ctx.send('2달 이내의 시간으로 설명해주세요.')
     except:
@@ -64,29 +74,30 @@ async def timer(ctx):
 @bot.command(name='반복알람')
 async def repeat_timer(ctx):
     try:
+        if len(alarm_info) == list_limit:
+            raise ListLongError
+        
         lst = ctx.message.content.split()[1:]
         
         after_time = time_calc(lst[0])
         repeat_time = time_calc(lst[1])
-        # print(after_time,repeat_time)
         if max(repeat_time,after_time) >= 5184000:
             raise TimeLongError            
+        
         repeat = int(lst[2])
-        message = ' '.join(lst[3:])
+        message = ' '.join(lst[3:]) # ! split에서부터 수정 필요.. 어떻게 하면 좋을까?
         
         await ctx.send('반복 알람 설정이 예약되었습니다.')
         
-        x = await threader(ctx, after_time)
-        if x:
-            raise
-
-        await ctx.send('반복 알람 시작! 메시지 : {}'.format(message))
+        asyncio.create_task(await threader(ctx, after_time,'반복 알람 시작! 메시지 : {}'.format(message)))
         
         for i in range(1,repeat+1):
-            asyncio.create_task(threader(ctx, i*repeat_time, '{}. {}'.format(i,message)))
+            asyncio.create_task(threader(ctx, after_time + i*repeat_time, '{}. {}'.format(i,message)))
         
-        asyncio.create_task(threader(ctx, i*repeat_time, '반복알람이 종료되었습니다.'))
+        asyncio.create_task(threader(ctx, after_time + i*repeat_time, '반복알람이 종료되었습니다.'))
         
+    except ListLongError:
+        await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
     except TimeLongError:
         await ctx.send('대기시간 혹은 반복시간이 너무 깁니다. 2달 이내의 시간으로 설정해주세요.')
     except Exception:
