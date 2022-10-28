@@ -2,18 +2,20 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+# !!!! 제어부분. 
+
+list_limit = 10 # 알람 갯수제한.
+repeat_limit = 100 # 알람 반복 갯수제한.
+
 import asyncio
+import datetime
 import discord
 from discord.ext import commands
 
 from Services.time_func import (time_calc, threader)
-from Services.etc_func import create_tmp_id
+from Services.id_func import (get_id, delete_id)
 from Services.alarm_info import alarm_info
 from Services.Exception import (TimeLongError, ListLongError, RepeatLongError)
-
-# !!!! 제어부분. 
-
-list_limit = 10 # 알람 갯수제한.
 
 # ! 코드.
 
@@ -49,21 +51,27 @@ author ID = {author_id}
 @bot.command(name='알람')
 async def timer(ctx):
     try:
-        if len(alarm_info) == list_limit:
+        if len(alarm_info) >= list_limit:
             raise ListLongError
+        
         lst = ctx.message.content.split()[1:]
-        message = '알람이 종료되었습니다.'
+
+        message = ''
         res_time = time_calc(lst[0])
+        print(res_time)        
         if len(lst) == 2:
             message = lst[1]
         elif len(lst)>2:
             message = ' '.join(lst[1:])
-            
-        
+        print(message)
         if res_time >= 5184000:
             raise TimeLongError
         
-        asyncio.create_task(threader(ctx, res_time, message))
+        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content))
+        print(id)
+        asyncio.create_task(threader(ctx, res_time, id, message))
+        asyncio.create_task(delete_id(res_time+1,id))
+        
     except ListLongError:
         await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
     except TimeLongError:
@@ -74,7 +82,7 @@ async def timer(ctx):
 @bot.command(name='반복알람')
 async def repeat_timer(ctx):
     try:
-        if len(alarm_info) == list_limit:
+        if len(alarm_info) >= list_limit:
             raise ListLongError
         
         lst = ctx.message.content.split()[1:]
@@ -82,24 +90,34 @@ async def repeat_timer(ctx):
         after_time = time_calc(lst[0])
         repeat_time = time_calc(lst[1])
         if max(repeat_time,after_time) >= 5184000:
-            raise TimeLongError            
+            raise TimeLongError
         
         repeat = int(lst[2])
-        message = ' '.join(lst[3:]) # ! split에서부터 수정 필요.. 어떻게 하면 좋을까?
+        if repeat>repeat_limit:
+            raise RepeatLongError
         
+        if len(lst) == 4:
+            message = lst[3]
+        else:
+            message = ' '.join(lst[3:]) # ! split에서부터 수정 필요.. 어떻게 하면 좋을까?
+        
+        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content))
         await ctx.send('반복 알람 설정이 예약되었습니다.')
         
-        asyncio.create_task(await threader(ctx, after_time,'반복 알람 시작! 메시지 : {}'.format(message)))
+        asyncio.create_task(await threader(ctx, after_time, id, '반복 알람 시작! 메시지 : {}'.format(message)))
         
         for i in range(1,repeat+1):
-            asyncio.create_task(threader(ctx, after_time + i*repeat_time, '{}. {}'.format(i,message)))
+            asyncio.create_task(threader(ctx, after_time + i*repeat_time, id, '{}. {}'.format(i,message)))
         
-        asyncio.create_task(threader(ctx, after_time + i*repeat_time, '반복알람이 종료되었습니다.'))
+        asyncio.create_task(threader(ctx, after_time + i*repeat_time, id, '반복알람이 종료되었습니다.'))
+        asyncio.create_task(delete_id(after_time + i*repeat_time + 1,id))
         
     except ListLongError:
         await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
     except TimeLongError:
         await ctx.send('대기시간 혹은 반복시간이 너무 깁니다. 2달 이내의 시간으로 설정해주세요.')
+    except RepeatLongError:
+        await ctx.send('너무 많은 반복입니다. {}개 미만으로 알람 갯수를 줄여주세요.'.format(repeat_limit))
     except Exception:
         await ctx.send('잘못된 사용법입니다.')
 
@@ -108,18 +126,39 @@ async def repeat_timer(ctx):
 # ! 우선 알람 리스트 불러오기부터 완성시켜볼 것..!..
 @bot.command(name='알람리스트')
 async def alarm_lst(ctx):
-    print(bot)
-    x = await bot.application_info()
-    print(x.id)
-    print(x)
-    print(bot.check)
-    print(bot.user)
-    print(bot.tree.get_commands())
-    print(bot.loop.get_task_factory())
-    
-    print('====================')
-    await ctx.send('11')
-
+    try:
+        if ctx.message.content[1:] != '알람리스트':
+            raise
+        
+        cnt = 0
+        for i in range(list_limit):
+            if alarm_info[i]:
+                message = 'id : {}, alarm : {}'.format(i,alarm_info[i])
+                cnt += 1
+                await ctx.send(message)
+                
+        if cnt == 0:
+            await ctx.send('대기중인 알람이 존재하지 않습니다.')
+    except:
+        await ctx.send('메시지를 잘못 입력하셨습니다. 정확한 메세지 : >알람리스트')
+        
+@bot.command(name='알람삭제')
+async def delete_alarm(ctx):
+    try:
+        message = ctx.message.content.split()
+        if len(message) != 2:
+            raise
+        
+        id = int(message[1])
+        alarm_message = alarm_info[id]
+        if not alarm_message:
+            raise
+        
+        alarm_info[id] = None
+        await ctx.send('알람 삭제 완료!, 알람 내용 :',alarm_message)
+    except:
+        await ctx.send('해당 아이디의 알람이 존재하지 않습니다.')
+        
 bot.run(discord_token)
 
 # @bot.command(name='check')
@@ -155,3 +194,6 @@ bot.run(discord_token)
 
 # ! Third Problem.
 # 여러 명령 제어.. ex 취소 등.. asyncio 사용에 익숙해질 필요가 있다. + 이미 디코 서버에서는 asyncio를 써서 코드를 제어하고 있는듯..
+
+# ! Fourth Problem.
+# get_id 함수 자체가 먹통이다.. 왜 작동을 하지 않는 거일까..?.. 당황스러운데..,,,

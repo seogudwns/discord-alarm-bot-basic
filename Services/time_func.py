@@ -1,6 +1,6 @@
 # 파일 하나에 담기에는 너무 길어서 함수로 분리.
-import time
 import asyncio
+from Services.alarm_info import alarm_info
 
 def time_calc(arr):
     times = 0
@@ -25,8 +25,11 @@ def time_calc(arr):
     
     return times
 
-async def threader(ctx, unit_time:int, message:str = None):
+async def threader(ctx, unit_time:int, id, message:str = None):
     await asyncio.sleep(unit_time)
+    if id not in alarm_info:
+        return
     if message == None:
         return
     await ctx.send(message)
+    
