@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-# !!!! 제어부분. 
+# !!!! 제어부분... 추후 다시 생각해봐야 함. 여기 넣었을 때 작동하지 않음. usestate같은 것이 있나??..
 
 list_limit = 10 # 알람 갯수제한.
 repeat_limit = 100 # 알람 반복 갯수제한.
@@ -67,8 +67,12 @@ async def timer(ctx):
         if res_time >= 5184000:
             raise TimeLongError
         
-        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content))
-        print(id)
+        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content)) 
+        # ! 여기가 문제. 함수 자체가 실행되지 않는데..
+        
+        if not id:
+            print('id 인식 안됨..')
+            raise
         asyncio.create_task(threader(ctx, res_time, id, message))
         asyncio.create_task(delete_id(res_time+1,id))
         
@@ -197,3 +201,4 @@ bot.run(discord_token)
 
 # ! Fourth Problem.
 # get_id 함수 자체가 먹통이다.. 왜 작동을 하지 않는 거일까..?.. 당황스러운데..,,,
+# 아예 서버를 잡아야 해서 그런건가??..

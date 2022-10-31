@@ -72,3 +72,28 @@
 # asyncio.run(main())
 # import random
 # print(str(random.random())[2:])
+
+# import asyncio
+# from Services.alarm_info import alarm_info
+# from Services.id_func import (get_id, delete_id)
+
+# print(alarm_info)
+
+# alarm_info['123'] = 123
+# print(alarm_info)
+
+import asyncio
+from Services.alarm_info import saveAlarmInfo
+
+alarm_info = saveAlarmInfo()
+
+print(alarm_info.info)
+
+x = alarm_info.get_id('qwer')
+for i in range(5):
+    alarm_info.get_id(str(i))
+    
+print(alarm_info.info)
+asyncio.run(alarm_info.delete_id(1,2))
+
+print(alarm_info.info)
