@@ -13,9 +13,10 @@ import discord
 from discord.ext import commands
 
 from Services.time_func import (time_calc, threader)
-from Services.id_func import (get_id, delete_id)
-from Services.alarm_info import alarm_info
+from Services.alarm_info import SaveAlarmInfo
 from Services.Exception import (TimeLongError, ListLongError, RepeatLongError)
+
+alarm = SaveAlarmInfo()
 
 # ! 코드.
 
@@ -28,6 +29,7 @@ bot = commands.Bot(command_prefix='>',intents=intents)
 @bot.event
 async def on_ready():
     print('login Bot: {}'.format(bot.user))
+    
 
 @bot.command() # def를 써줘야한다. 여기서는 ping을 쓸 시 pong이 돌아감.
 async def ping(ctx):
@@ -51,14 +53,14 @@ author ID = {author_id}
 @bot.command(name='알람')
 async def timer(ctx):
     try:
-        if len(alarm_info) >= list_limit:
+        if alarm.leng() >= list_limit:
             raise ListLongError
         
         lst = ctx.message.content.split()[1:]
 
         message = ''
         res_time = time_calc(lst[0])
-        print(res_time)        
+        # print(res_time)
         if len(lst) == 2:
             message = lst[1]
         elif len(lst)>2:
@@ -66,15 +68,16 @@ async def timer(ctx):
         print(message)
         if res_time >= 5184000:
             raise TimeLongError
-        
-        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content)) 
+        print('알람 리스트가 선언이 안되는 것 같은데??.. ')
+        print('알람 리스트가 선언이 안되는 것 같은데??..(2) ',alarm.info())
+        id = alarm.get_id('{} : {}'.format(datetime.now(), ctx.message.content)) 
         # ! 여기가 문제. 함수 자체가 실행되지 않는데..
-        
+        print(id)
         if not id:
             print('id 인식 안됨..')
             raise
         asyncio.create_task(threader(ctx, res_time, id, message))
-        asyncio.create_task(delete_id(res_time+1,id))
+        asyncio.create_task(alarm.delete_id(res_time+1,id))
         
     except ListLongError:
         await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
@@ -86,7 +89,7 @@ async def timer(ctx):
 @bot.command(name='반복알람')
 async def repeat_timer(ctx):
     try:
-        if len(alarm_info) >= list_limit:
+        if alarm.ieng() >= list_limit:
             raise ListLongError
         
         lst = ctx.message.content.split()[1:]
@@ -105,7 +108,7 @@ async def repeat_timer(ctx):
         else:
             message = ' '.join(lst[3:]) # ! split에서부터 수정 필요.. 어떻게 하면 좋을까?
         
-        id = get_id('{} : {}'.format(datetime.now(), ctx.message.content))
+        id = alarm.get_id('{} : {}'.format(datetime.now(), ctx.message.content))
         await ctx.send('반복 알람 설정이 예약되었습니다.')
         
         asyncio.create_task(await threader(ctx, after_time, id, '반복 알람 시작! 메시지 : {}'.format(message)))
@@ -114,7 +117,7 @@ async def repeat_timer(ctx):
             asyncio.create_task(threader(ctx, after_time + i*repeat_time, id, '{}. {}'.format(i,message)))
         
         asyncio.create_task(threader(ctx, after_time + i*repeat_time, id, '반복알람이 종료되었습니다.'))
-        asyncio.create_task(delete_id(after_time + i*repeat_time + 1,id))
+        asyncio.create_task(alarm.delete_id(after_time + i*repeat_time + 1,id))
         
     except ListLongError:
         await ctx.send('알람 예약 갯수 한도를 초과했습니다.')
@@ -136,8 +139,8 @@ async def alarm_lst(ctx):
         
         cnt = 0
         for i in range(list_limit):
-            if alarm_info[i]:
-                message = 'id : {}, alarm : {}'.format(i,alarm_info[i])
+            if alarm.info()[i]:
+                message = 'id : {}, alarm : {}'.format(i,alarm.info[i])
                 cnt += 1
                 await ctx.send(message)
                 
@@ -154,15 +157,15 @@ async def delete_alarm(ctx):
             raise
         
         id = int(message[1])
-        alarm_message = alarm_info[id]
+        alarm_message = alarm.info[id]
         if not alarm_message:
             raise
         
-        alarm_info[id] = None
+        asyncio.create_task(alarm.delete_id(id))
         await ctx.send('알람 삭제 완료!, 알람 내용 :',alarm_message)
     except:
         await ctx.send('해당 아이디의 알람이 존재하지 않습니다.')
-        
+
 bot.run(discord_token)
 
 # @bot.command(name='check')

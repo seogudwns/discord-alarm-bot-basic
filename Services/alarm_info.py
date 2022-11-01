@@ -8,7 +8,7 @@ import asyncio
 
 alarm_info = dict()
 
-class saveAlarmInfo:
+class SaveAlarmInfo:
     def __init__(self):
         self.info = dict()
         
@@ -25,13 +25,13 @@ class saveAlarmInfo:
             if i not in self.info:
                 self.info[i] = message
                 return i 
-        return ''
+        return -1
     
     async def delete_id(self,t:int,i:int):
         if t <= 0:
             return '0초 이하 X!!'
         if i not in self.info:
-            # 여기서 raise를 쓰게되면 어떤 일이 일어날까?.. error 반환, 
+            # 여기서 raise를 쓰게되면 어떤 일이 일어날까?.. error 반환(?), 
             return '해당 정보 없음.'
         await asyncio.sleep(t)
         message = self.info[i]

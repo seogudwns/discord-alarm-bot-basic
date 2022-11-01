@@ -82,18 +82,21 @@
 # alarm_info['123'] = 123
 # print(alarm_info)
 
-import asyncio
-from Services.alarm_info import saveAlarmInfo
+# # ! 
 
-alarm_info = saveAlarmInfo()
+# import asyncio
+# from Services.alarm_info import SaveAlarmInfo
 
-print(alarm_info.info)
+# alarm_info = SaveAlarmInfo()
 
-x = alarm_info.get_id('qwer')
-for i in range(5):
-    alarm_info.get_id(str(i))
+# print(alarm_info.info)
+
+# x = alarm_info.get_id('qwer')
+# for i in range(5):
+#     alarm_info.get_id(str(i))
     
-print(alarm_info.info)
-asyncio.run(alarm_info.delete_id(1,2))
+# print(alarm_info.info)
+# asyncio.run(alarm_info.delete_id(1,2))
 
-print(alarm_info.info)
+# print(alarm_info.info)
+
